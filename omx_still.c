@@ -412,8 +412,10 @@ WARN_UNUSED enum error_code omx_still_open(void)
 
     result = omx_setup_tunnel(  camera.handle,  71,  splitter.handle, 250); if(result!=OK) { return result; }
 
+    // Tunneling camera to splitter changed the splitter port settings, lets wait for them
     result = wait(&splitter, EVENT_PORT_SETTINGS_CHANGED, 0); if(result!=OK) { return result; }
 
+    // Splitter must be initialised after the tunnel configures the output ports
     result = init_splitter();  if(result!=OK) { return result; }
 
     result = omx_setup_tunnel(splitter.handle, 251,   encoder.handle, 340); if(result!=OK) { return result; }
@@ -426,12 +428,30 @@ WARN_UNUSED enum error_code omx_still_open(void)
     result = change_state(&encoder,   OMX_StateIdle); if(result!=OK) { return result; } result = wait(&encoder,   EVENT_STATE_SET, 0); if(result!=OK) { return result; }
 
     //Enable the tunnel ports
-    result = enable_port(&camera,     71); if(result!=OK) { return result; } result = wait(&camera,    EVENT_PORT_ENABLE, 0); if(result!=OK) { return result; }
-    result = enable_port(&camera,     70); if(result!=OK) { return result; } result = wait(&camera,    EVENT_PORT_ENABLE, 0); if(result!=OK) { return result; }
-    result = enable_port(&null_sink, 240); if(result!=OK) { return result; } result = wait(&null_sink, EVENT_PORT_ENABLE, 0); if(result!=OK) { return result; }
-    result = enable_port(&splitter,  250); if(result!=OK) { return result; } result = wait(&splitter,  EVENT_PORT_ENABLE, 0); if(result!=OK) { return result; }
-    result = enable_port(&splitter,  251); if(result!=OK) { return result; } result = wait(&splitter,  EVENT_PORT_ENABLE, 0); if(result!=OK) { return result; }
-    result = enable_port(&encoder,   340); if(result!=OK) { return result; } result = wait(&encoder,   EVENT_PORT_ENABLE, 0); if(result!=OK) { return result; }
+
+    // First enable both tunel ports
+    result = enable_port(&camera,     71); if(result!=OK) { return result; }
+    result = enable_port(&splitter,  250); if(result!=OK) { return result; }
+
+    // Then wait now for the port enable event
+    result = wait(&camera,    EVENT_PORT_ENABLE, 0); if(result!=OK) { return result; }
+    result = wait(&splitter,  EVENT_PORT_ENABLE, 0); if(result!=OK) { return result; }
+
+    // First enable both tunel ports
+    result = enable_port(&camera,     70); if(result!=OK) { return result; }
+    result = enable_port(&null_sink, 240); if(result!=OK) { return result; }
+
+    // Then wait now for the port enable event
+    result = wait(&camera,    EVENT_PORT_ENABLE, 0); if(result!=OK) { return result; }
+    result = wait(&null_sink, EVENT_PORT_ENABLE, 0); if(result!=OK) { return result; }
+
+    // First enable both tunel ports
+    result = enable_port(&splitter,  251); if(result!=OK) { return result; }
+    result = enable_port(&encoder,   340); if(result!=OK) { return result; }
+
+    // Then wait now for the port enable event
+    result = wait(&splitter,  EVENT_PORT_ENABLE, 0); if(result!=OK) { return result; }
+    result = wait(&encoder,   EVENT_PORT_ENABLE, 0); if(result!=OK) { return result; }
 
     result = port_enable_allocate_buffer(&encoder, &output_buffer, 341); if(result!=OK) { return result; }
 
