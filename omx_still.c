@@ -19,8 +19,8 @@
 #define JPEG_PREVIEW                OMX_FALSE
 
 //Some settings doesn't work well
-#define CAM_WIDTH                   3280 // 2592
-#define CAM_HEIGHT                  2464 // 1944
+#define CAM_WIDTH                   2464      // 3280 // 2592
+#define CAM_HEIGHT                  3280      // 2464 // 1944
 #define CAM_SHARPNESS               0         // -100 ..  100
 #define CAM_CONTRAST                0         // -100 ..  100
 #define CAM_BRIGHTNESS              50        //    0 ..  100
@@ -33,7 +33,7 @@
 #define CAM_EXPOSURE                OMX_ExposureControlOff
 #define CAM_EXPOSURE_COMPENSATION   0         //  -24 ..   24
 #define CAM_MIRROR                  OMX_MirrorNone
-#define CAM_ROTATION                0         // 0 90 180 270
+#define CAM_ROTATION                90        // 0 90 180 270
 #define CAM_COLOR_ENABLE            OMX_FALSE
 #define CAM_COLOR_U                 128       //    0 ..  255
 #define CAM_COLOR_V                 128       //    0 ..  255
