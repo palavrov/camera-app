@@ -405,3 +405,39 @@ void dump_OMX_BUFFERHEADERTYPE(OMX_BUFFERHEADERTYPE* header)
       header->nOutputPortIndex,
       header->nInputPortIndex);
 }
+
+enum error_code
+dump_port_defs(
+        OMX_IN    OMX_HANDLETYPE  hComponent,
+        OMX_IN    OMX_INDEXTYPE   nPortIndex)
+{
+    enum error_code result;
+
+    OMX_PARAM_PORTDEFINITIONTYPE port_def; OMX_INIT_STRUCTURE (port_def);
+
+    port_def.nPortIndex = nPortIndex;
+
+    result = omx_get_parameter(hComponent, OMX_IndexParamPortDefinition, &port_def); if(result!=OK) { return result; }
+
+    dump_OMX_PARAM_PORTDEFINITIONTYPE(&port_def);
+
+    return OK;
+}
+
+enum error_code
+dump_port_frame_size(
+        OMX_IN    OMX_HANDLETYPE  hComponent,
+        OMX_IN    OMX_INDEXTYPE   nPortIndex)
+{
+    enum error_code result;
+
+    OMX_FRAMESIZETYPE frame_size; OMX_INIT_STRUCTURE (frame_size);
+
+    frame_size.nPortIndex = nPortIndex;
+
+    result = omx_get_parameter(hComponent, OMX_IndexParamPortMaxFrameSize, &frame_size); if(result!=OK) { return result; }
+
+    LOG_MESSAGE("nPortIndex: %d, nWidth: %d, nHeight:%d", nPortIndex, frame_size.nWidth, frame_size.nHeight);
+
+    return OK;
+}

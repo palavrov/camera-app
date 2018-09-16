@@ -17,6 +17,8 @@ size_t position2 = 0;
 
 void buffering1(const uint8_t * const buffer, size_t length)
 {
+    LOG_MESSAGE("Buffer 1 Received %d at position %d", length, position1);
+
     if(length > sizeof(jpeg1)-position1)
     {
         LOG_ERROR("Buffer1 overflow %d %d", position1, length);
@@ -30,6 +32,8 @@ void buffering1(const uint8_t * const buffer, size_t length)
 
 void buffering2(const uint8_t * const buffer, size_t length)
 {
+    LOG_MESSAGE("Buffer 2 Received %d at position %d", length, position2);
+
     if(length > sizeof(jpeg2)-position2)
     {
         LOG_ERROR("Buffer2 overflow %d %d", position2, length);

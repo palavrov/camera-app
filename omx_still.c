@@ -175,8 +175,6 @@ enum error_code set_camera_videoport(void)
 
     result = omx_get_parameter(camera.handle, OMX_IndexParamPortDefinition, &port_def); if(result!=OK) { return result; }
 
-    dump_OMX_PARAM_PORTDEFINITIONTYPE(&port_def);
-
     port_def.format.video.nFrameWidth        = CAM_WIDTH;
     port_def.format.video.nFrameHeight       = CAM_HEIGHT;
     port_def.format.video.eCompressionFormat = OMX_IMAGE_CodingUnused;
@@ -212,8 +210,6 @@ enum error_code set_camera_previewport(void)
     port_def.nPortIndex = 70;
 
     result = omx_get_parameter(camera.handle, OMX_IndexParamPortDefinition, &port_def); if(result!=OK) { return result; }
-
-    dump_OMX_PARAM_PORTDEFINITIONTYPE(&port_def);
 
     port_def.format.video.nFrameWidth = 640;
     port_def.format.video.nFrameHeight = 480;
@@ -330,8 +326,6 @@ enum error_code init_splitter(void)
     LOG_MESSAGE_COMPONENT(&splitter, "Getting port definitions");
 
     result = omx_get_parameter(splitter.handle, OMX_IndexParamPortDefinition, &port_def); if(result!=OK) { return result; }
-
-    dump_OMX_PARAM_PORTDEFINITIONTYPE(&port_def);
 
     port_def.format.video.nFrameWidth        = CAM_WIDTH;
     port_def.format.video.nFrameHeight       = CAM_HEIGHT;
@@ -460,6 +454,18 @@ WARN_UNUSED enum error_code omx_still_open(void)
     result = change_state(&null_sink, OMX_StateExecuting); if(result!=OK) { return result; } result = wait(&null_sink, EVENT_STATE_SET, 0); if(result!=OK) { return result; }
     result = change_state(&splitter,  OMX_StateExecuting); if(result!=OK) { return result; } result = wait(&splitter,  EVENT_STATE_SET, 0); if(result!=OK) { return result; }
     result = change_state(&encoder,   OMX_StateExecuting); if(result!=OK) { return result; } result = wait(&encoder,   EVENT_STATE_SET, 0); if(result!=OK) { return result; }
+
+    result = dump_port_defs(   camera.handle,  70); if(result!=OK) { return result; }
+    result = dump_port_defs(   camera.handle,  71); if(result!=OK) { return result; }
+    result = dump_port_defs(null_sink.handle, 240); if(result!=OK) { return result; }
+    result = dump_port_defs( splitter.handle, 250); if(result!=OK) { return result; }
+    result = dump_port_defs( splitter.handle, 251); if(result!=OK) { return result; }
+    result = dump_port_defs(  encoder.handle, 340); if(result!=OK) { return result; }
+    result = dump_port_defs(  encoder.handle, 341); if(result!=OK) { return result; }
+
+    result = dump_port_frame_size(   camera.handle,  70); if(result!=OK) { return result; }
+    result = dump_port_frame_size(   camera.handle,  71); if(result!=OK) { return result; }
+    result = dump_port_frame_size(   camera.handle,  72); if(result!=OK) { return result; }
 
     return OK;
 }
