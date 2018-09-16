@@ -20,7 +20,7 @@ void buffering1(const uint8_t * const buffer, size_t length)
     if(length > sizeof(jpeg1)-position1)
     {
         LOG_ERROR("Buffer1 overflow %d %d", position1, length);
-        length = sizeof(jpeg1-position1);
+        length = sizeof(jpeg1)-position1;
     }
 
     memcpy(&jpeg1[position1], buffer, length);
@@ -33,7 +33,7 @@ void buffering2(const uint8_t * const buffer, size_t length)
     if(length > sizeof(jpeg2)-position2)
     {
         LOG_ERROR("Buffer2 overflow %d %d", position2, length);
-        length = sizeof(jpeg2-position2);
+        length = sizeof(jpeg2)-position2;
     }
 
     memcpy(&jpeg2[position2], buffer, length);
