@@ -168,6 +168,7 @@ enum error_code set_camera_videoport(void)
     //See mmal/util/mmal_util.c, mmal_encoding_width_to_stride()
     port_def.format.video.nStride            = round_up(CAM_WIDTH, 32);
     port_def.format.video.nSliceHeight       = round_up(CAM_HEIGHT, 16);
+    port_def.format.video.xFramerate         = 15 << 16;
 
     result = omx_set_parameter(camera.handle, OMX_IndexParamPortDefinition, &port_def); if(result!=OK) { return result; }
 
@@ -460,6 +461,10 @@ WARN_UNUSED enum error_code omx_still_shoot(const buffer_output_handler handler)
 {
     enum error_code result;
 
+    LOG_MESSAGE_COMPONENT(&splitter, "single step mode");
+
+    result = omx_config_singlestep(splitter.handle, 251, 1); if(result!=OK) { return result; }
+
     //Enable camera capture port. This basically says that the port 72 will be
     //used to get data from the camera. If you're capturing video, the port 71
     //must be used
@@ -486,8 +491,8 @@ WARN_UNUSED enum error_code omx_still_shoot(const buffer_output_handler handler)
         if(retrieves_events == end_flags)
         {
             //Clear the EOS flags
-            result = wait(&camera,  EVENT_BUFFER_FLAG, 0); if(result!=OK) { return result; }
-            result = wait(&encoder, EVENT_BUFFER_FLAG, 0); if(result!=OK) { return result; }
+            result = wait(&splitter, EVENT_BUFFER_FLAG, 0); if(result!=OK) { return result; }
+            result = wait(&encoder,  EVENT_BUFFER_FLAG, 0); if(result!=OK) { return result; }
             break;
         }
     }
@@ -510,14 +515,22 @@ WARN_UNUSED enum error_code omx_still_close(void)
     result = change_state(&encoder,   OMX_StateIdle); if(result!=OK) { return result; } result = wait(&encoder,   EVENT_STATE_SET, 0); if(result!=OK) { return result; }
 
     //Disable the tunnel ports
-    result = port_disable_free_buffer(&encoder, output_buffer, 341); if(result!=OK) { return result; }
-
     result = disable_port(&camera,     71); if(result!=OK) { return result; }
+    result = disable_port(&splitter,  250); if(result!=OK) { return result; }
+    result = wait(&camera,    EVENT_PORT_DISABLE, 0); if(result!=OK) { return result; }
+    result = wait(&splitter,  EVENT_PORT_DISABLE, 0); if(result!=OK) { return result; }
+
     result = disable_port(&camera,     70); if(result!=OK) { return result; }
     result = disable_port(&null_sink, 240); if(result!=OK) { return result; }
-    result = disable_port(&splitter,  350); if(result!=OK) { return result; }
-    result = disable_port(&splitter,  351); if(result!=OK) { return result; }
+    result = wait(&camera,    EVENT_PORT_DISABLE, 0); if(result!=OK) { return result; }
+    result = wait(&null_sink, EVENT_PORT_DISABLE, 0); if(result!=OK) { return result; }
+
+    result = disable_port(&splitter,  251); if(result!=OK) { return result; }
     result = disable_port(&encoder,   340); if(result!=OK) { return result; }
+    result = wait(&splitter,  EVENT_PORT_DISABLE, 0); if(result!=OK) { return result; }
+    result = wait(&encoder,   EVENT_PORT_DISABLE, 0); if(result!=OK) { return result; }
+
+    result = port_disable_free_buffer(&encoder, output_buffer, 341); if(result!=OK) { return result; }
 
     //Change state to LOADED
     result = change_state(&camera,    OMX_StateLoaded); if(result!=OK) { return result; } result = wait(&camera,    EVENT_STATE_SET, 0); if(result!=OK) { return result; }
