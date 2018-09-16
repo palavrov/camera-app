@@ -139,24 +139,8 @@ enum error_code set_camera_sensor_framesize(void)
 {
     enum error_code result;
 
-    //Configure camera sensor
-    LOG_MESSAGE_COMPONENT(&camera, "configuring sensor");
-
-    OMX_PARAM_SENSORMODETYPE sensor; OMX_INIT_STRUCTURE (sensor);
-
-    sensor.nPortIndex = OMX_ALL;
-
-    OMX_INIT_STRUCTURE (sensor.sFrameSize);
-
-    sensor.sFrameSize.nPortIndex = OMX_ALL;
-
-    result = omx_get_parameter(camera.handle, OMX_IndexParamCommonSensorMode, &sensor); if(result!=OK) { return result; }
-
-    sensor.bOneShot = OMX_TRUE;
-    sensor.sFrameSize.nWidth = CAM_WIDTH;
-    sensor.sFrameSize.nHeight = CAM_HEIGHT;
-
-    result = omx_set_parameter(camera.handle, OMX_IndexParamCommonSensorMode, &sensor); if(result!=OK) { return result; }
+    result = omx_parameter_port_max_frame_size(camera.handle, 70, round_up(CAM_WIDTH, 32), round_up(CAM_HEIGHT, 16)); if(result!=OK) { return result; }
+    result = omx_parameter_port_max_frame_size(camera.handle, 71, round_up(CAM_WIDTH, 32), round_up(CAM_HEIGHT, 16)); if(result!=OK) { return result; }
 
     return OK;
 }
@@ -211,17 +195,19 @@ enum error_code set_camera_previewport(void)
 
     result = omx_get_parameter(camera.handle, OMX_IndexParamPortDefinition, &port_def); if(result!=OK) { return result; }
 
-    port_def.format.video.nFrameWidth = 640;
-    port_def.format.video.nFrameHeight = 480;
+    port_def.format.video.nFrameWidth = CAM_WIDTH;
+    port_def.format.video.nFrameHeight = CAM_HEIGHT;
     port_def.format.video.eCompressionFormat = OMX_IMAGE_CodingUnused;
     port_def.format.video.eColorFormat = OMX_COLOR_FormatYUV420PackedPlanar;
     //Setting the framerate to 0 unblocks the shutter speed from 66ms to 772ms
     //The higher the speed, the higher the capture time
     port_def.format.video.xFramerate = 0;
-    port_def.format.video.nStride = 640;
-    port_def.format.video.nSliceHeight = round_up(480, 16);
+    port_def.format.video.nStride = round_up(CAM_WIDTH, 32);
+    port_def.format.video.nSliceHeight = round_up(CAM_HEIGHT, 16);
 
     result = omx_set_parameter(camera.handle, OMX_IndexParamPortDefinition, &port_def); if(result!=OK) { return result; }
+
+    result = omx_config_rotation    (camera.handle,      70, CAM_ROTATION    ); if(result!=OK) { return result; }
 
     return OK;
 }
