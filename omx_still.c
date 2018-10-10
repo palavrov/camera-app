@@ -215,16 +215,16 @@ enum error_code set_camera_previewport(void)
 }
 
 static WARN_UNUSED
-enum error_code set_camera_settings(void)
+enum error_code set_camera_settings(struct camera_shot_configuration config)
 {
     LOG_MESSAGE_COMPONENT(&camera, "configuring settings");
 
     enum error_code result;
 
-    result = omx_config_sharpness (camera.handle, OMX_ALL, CAM_SHARPNESS ); if(result!=OK) { return result; }
-    result = omx_config_contrast  (camera.handle, OMX_ALL, CAM_CONTRAST  ); if(result!=OK) { return result; }
-    result = omx_config_saturation(camera.handle, OMX_ALL, CAM_SATURATION); if(result!=OK) { return result; }
-    result = omx_config_brightness(camera.handle, OMX_ALL, CAM_BRIGHTNESS); if(result!=OK) { return result; }
+    result = omx_config_sharpness (camera.handle, OMX_ALL, config.sharpness ); if(result!=OK) { return result; }
+    result = omx_config_contrast  (camera.handle, OMX_ALL, config.contrast  ); if(result!=OK) { return result; }
+    result = omx_config_saturation(camera.handle, OMX_ALL, config.saturation); if(result!=OK) { return result; }
+    result = omx_config_brightness(camera.handle, OMX_ALL, config.brightness); if(result!=OK) { return result; }
     result = omx_config_exposure_value(
             camera.handle,
             OMX_ALL,
@@ -232,20 +232,20 @@ enum error_code set_camera_settings(void)
             (CAM_EXPOSURE_COMPENSATION << 16)/6,
             0,
             OMX_FALSE,
-            CAM_SHUTTER_SPEED,
+            config.shutterSpeed,
             CAM_SHUTTER_SPEED_AUTO,
-            CAM_ISO,
+            config.iso,
             CAM_ISO_AUTO); if(result!=OK) { return result; }
     result = omx_config_exposure           (camera.handle, OMX_ALL, CAM_EXPOSURE           ); if(result!=OK) { return result; }
     result = omx_config_frame_stabilisation(camera.handle, OMX_ALL, CAM_FRAME_STABILIZATION); if(result!=OK) { return result; }
-    result = omx_config_white_balance      (camera.handle, OMX_ALL, CAM_WHITE_BALANCE      ); if(result!=OK) { return result; }
+    result = omx_config_white_balance      (camera.handle, OMX_ALL, config.whiteBalance    ); if(result!=OK) { return result; }
 
     //White balance gains (if white balance is set to off)
-    if(!CAM_WHITE_BALANCE)
+    if(!config.whiteBalance)
     {
         result = omx_config_white_balance_gains(camera.handle,
-                (CAM_WHITE_BALANCE_RED_GAIN  << 16)/1000,
-                (CAM_WHITE_BALANCE_BLUE_GAIN << 16)/1000); if(result!=OK) { return result; }
+                (config.redGain  << 16)/1000,
+                (config.blueGain << 16)/1000); if(result!=OK) { return result; }
     }
 
     result = omx_config_image_filter(camera.handle, OMX_ALL, CAM_IMAGE_FILTER); if(result!=OK) { return result; }
@@ -258,19 +258,19 @@ enum error_code set_camera_settings(void)
             (CAM_ROI_TOP    << 16)/100,
             (CAM_ROI_WIDTH  << 16)/100,
             (CAM_ROI_HEIGHT << 16)/100); if(result!=OK) { return result; }
-    result = omx_config_dynamic_range_expansion(camera.handle, CAM_DRC); if(result!=OK) { return result; }
+    result = omx_config_dynamic_range_expansion(camera.handle, config.drc); if(result!=OK) { return result; }
 
     return OK;
 }
 
 static WARN_UNUSED
-enum error_code set_jpeg_settings(void)
+enum error_code set_jpeg_settings(struct camera_shot_configuration config)
 {
     LOG_MESSAGE_COMPONENT(&encoder, "configuring settings");
 
     enum error_code result;
 
-    result = omx_parameter_qfactor         (encoder.handle, 341, JPEG_QUALITY     ); if(result!=OK) { return result; }
+    result = omx_parameter_qfactor         (encoder.handle, 341, config.quality   ); if(result!=OK) { return result; }
     result = omx_parameter_brcm_exif       (encoder.handle,      JPEG_EXIF_DISABLE); if(result!=OK) { return result; }
     result = omx_parameter_brcm_ijg_scaling(encoder.handle, 341, JPEG_IJG_ENABLE  ); if(result!=OK) { return result; }
     result = omx_parameter_brcm_thumbnail  (encoder.handle,
@@ -287,7 +287,7 @@ enum error_code set_jpeg_settings(void)
 }
 
 static WARN_UNUSED
-enum error_code init_camera(void)
+enum error_code init_camera(struct camera_shot_configuration config)
 {
     enum error_code result;
 
@@ -295,7 +295,7 @@ enum error_code init_camera(void)
     result = set_camera_sensor_framesize(); if(result!=OK) { return result; }
     result = set_camera_videoport();        if(result!=OK) { return result; }
     result = set_camera_previewport();      if(result!=OK) { return result; }
-    result = set_camera_settings();         if(result!=OK) { return result; }
+    result = set_camera_settings(config);   if(result!=OK) { return result; }
 
     return OK;
 }
@@ -337,7 +337,7 @@ enum error_code init_splitter(void)
 }
 
 static WARN_UNUSED
-enum error_code init_encoder(void)
+enum error_code init_encoder(struct camera_shot_configuration config)
 {
     enum error_code result;
 
@@ -358,12 +358,12 @@ enum error_code init_encoder(void)
     result = omx_set_parameter(encoder.handle, OMX_IndexParamPortDefinition, &port_def); if(result!=OK) { return result; }
 
     //Configure JPEG settings
-    result = set_jpeg_settings(); if(result!=OK) { return result; }
+    result = set_jpeg_settings(config); if(result!=OK) { return result; }
 
     return OK;
 }
 
-WARN_UNUSED enum error_code omx_still_open(void)
+WARN_UNUSED enum error_code omx_still_open(struct camera_shot_configuration config)
 {
     enum error_code result;
 
@@ -384,8 +384,8 @@ WARN_UNUSED enum error_code omx_still_open(void)
     result = init_component(&splitter);  if(result!=OK) { return result; }
     result = init_component(&encoder);   if(result!=OK) { return result; }
 
-    result = init_camera();    if(result!=OK) { return result; }
-    result = init_encoder();   if(result!=OK) { return result; }
+    result = init_camera(config);    if(result!=OK) { return result; }
+    result = init_encoder(config);   if(result!=OK) { return result; }
 
     //Setup tunnels: camera (video) -> splitter -> image_encode, camera (preview) -> null_sink
     LOG_MESSAGE("configuring tunnels");
