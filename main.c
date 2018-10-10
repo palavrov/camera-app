@@ -45,6 +45,16 @@ void buffering2(const uint8_t * const buffer, size_t length)
     position2 += length;
 }
 
+void buffering(const uint32_t frame, const uint8_t * const buffer, size_t length)
+{
+    switch(frame)
+    {
+        case 0: buffering1(buffer, length); break;
+        case 1: buffering2(buffer, length); break;
+        default: LOG_ERROR("Unexpected frame %d", frame); break;
+    }
+}
+
 WARN_UNUSED enum error_code write_file(const char * const filename, const uint8_t * const buffer, const size_t length)
 {
     //Open the file
@@ -79,10 +89,9 @@ int main()
     position1 = 0;
     position2 = 0;
 
-    result = omx_still_open();            if(result!=OK) { return result; }
-    result = omx_still_shoot(buffering1); if(result!=OK) { return result; }
-    result = omx_still_shoot(buffering2); if(result!=OK) { return result; }
-    result = omx_still_close();           if(result!=OK) { return result; }
+    result = omx_still_open();              if(result!=OK) { return result; }
+    result = omx_still_shoot(2, buffering); if(result!=OK) { return result; }
+    result = omx_still_close();             if(result!=OK) { return result; }
 
     result = write_file("/tmp/1.jpg", jpeg1, position1); if(result!=OK) { return result; }
     result = write_file("/tmp/2.jpg", jpeg2, position2); if(result!=OK) { return result; }

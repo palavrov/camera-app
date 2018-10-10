@@ -6,10 +6,10 @@
 
 #include "error.h"
 
-typedef void (*buffer_output_handler)(const uint8_t * const buffer, const size_t length);
+typedef void (*buffer_output_handler)(const uint32_t frame, const uint8_t * const buffer, const size_t length);
 
 WARN_UNUSED enum error_code omx_still_open(void);
 WARN_UNUSED enum error_code omx_still_close(void);
-WARN_UNUSED enum error_code omx_still_shoot(const buffer_output_handler handler);
+WARN_UNUSED enum error_code omx_still_shoot(const uint32_t frames, const buffer_output_handler handler);
 
 #endif
